@@ -20,12 +20,13 @@ data:
       </div>
     </body>
     </html>
+
 ---
-# Neuer ServiceAccount (nicht "default")
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: webserver-sa
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -79,6 +80,7 @@ spec:
         - name: html
           configMap:
             name: webserver-index
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -132,6 +134,7 @@ spec:
         - name: html
           configMap:
             name: webserver-index
+
 ---
 apiVersion: v1
 kind: Service
@@ -140,10 +143,12 @@ metadata:
 spec:
   selector:
     app: webserver
+    version: blue  
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
+
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -163,4 +168,26 @@ spec:
                 port:
                   number: 80
 
-
+---
+# Upgrade-Prozess für Blue/Green Deployment:
+#
+# 1. Neue Version ('green') deployen:
+#    kubectl apply -f aufgaben.yaml
+#
+# 2. Überprüfung der laufenden Pods:
+#    kubectl get pods -l app=webserver
+#
+# 3. Umschalten des Services von 'blue' auf 'green':
+#    kubectl patch service webserver -p '{"spec":{"selector":{"app":"webserver","version":"green"}}}'
+#
+# 4. Validierung (Test der neuen Version):
+#     http://schurrj.k8s.schoeppi5.de
+#
+# 5. Falls alles funktioniert, 'blue' auf neue Version updaten:
+#    kubectl scale deployment webserver-blue --replicas=0
+#
+# 6. Falls Fehler auftreten, schnell zurückwechseln:
+#    kubectl patch service webserver -p '{"spec":{"selector":{"app":"webserver","version":"blue"}}}'
+#
+# 7. Deployment abschließen: Altes Deployment auf 2 Replikas setzen für nächstes Upgrade:
+#    kubectl scale deployment webserver-blue --replicas=2
