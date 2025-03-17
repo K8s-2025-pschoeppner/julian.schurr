@@ -58,5 +58,10 @@ Der Webserver soll mittles der Blue/Green Deployment Strategie geupdatet werden 
 Sollten Sie noch Zeit haben, können Sie die folgenden Fragen noch beantworten:
 
 * Was ist ein `ReplicaSet` und wofür wird es verwendet? (1 Punkt)
+Ein ReplicaSet ist eine Kubernetes-Resource, die sicherstellt, dass eine festgelegte Anzahl von identischen Pods immer läuft. Falls ein Pod abstürzt oder gelöscht wird, startet das ReplicaSet automatisch einen neuen.
+
 * Welche Auswirkungen hat die `Quality of Service` Klasse eines Pods und wie wird sie bestimmt? (1 Punkt)
+Die QoS-Klasse eines Pods bestimmt, wie Kubernetes mit den Ressourcen des Pods umgeht. Sie beeinflusst, wie stabil der Pod läuft und ob er bei Ressourcenknappheit evtl. beendet wird. Je nach CPU- und Speicheranfragen (requests) und -limits (limits) wird der Pod einer der drei QoS-Klassen zugewiesen Guaranteed, Burstable, BestEffort.
+
 * Was ist die Aufgabe des `CNI` in Kubernetes? (1 Punkt)
+Es stellt sicher, dass alle Pods eine IP-Adresse bekommen und sich gegenseitig erreichen können.
