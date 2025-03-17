@@ -140,13 +140,11 @@ metadata:
 spec:
   selector:
     app: webserver
-    version: blue  
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
 ---
-# Ingress zur externen Erreichbarkeit via HTTP (ohne Portangabe)
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
