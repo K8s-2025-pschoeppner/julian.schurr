@@ -1,0 +1,168 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webserver-index
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset='utf-8'>
+      <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+      <title>Klausur K8s 2025</title>
+      <meta name='viewport' content='width=device-width, initial-scale=1'>
+    </head>
+    <body>
+      <h1>Kubernetes Klausur DHBW 2025</h1>
+      <marquee>Kubernetes is fun!</marquee>
+      <div id="center-div" style="margin-top: 50px; margin-left: 60px; border: 1px solid black;">
+        <p>Center div</p>
+      </div>
+    </body>
+    </html>
+---
+# Neuer ServiceAccount (nicht "default")
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: webserver-sa
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webserver-blue
+  labels:
+    app: webserver
+    version: blue
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: webserver
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: webserver
+        version: blue
+    spec:
+      serviceAccountName: webserver-sa
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: webserver
+                  version: blue
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: webserver
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+      volumes:
+        - name: html
+          configMap:
+            name: webserver-index
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webserver-green
+  labels:
+    app: webserver
+    version: green
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: webserver
+      version: green
+  template:
+    metadata:
+      labels:
+        app: webserver
+        version: green
+    spec:
+      serviceAccountName: webserver-sa
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: webserver
+                  version: green
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: webserver
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+      volumes:
+        - name: html
+          configMap:
+            name: webserver-index
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webserver
+spec:
+  selector:
+    app: webserver
+    version: blue  
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+# Ingress zur externen Erreichbarkeit via HTTP (ohne Portangabe)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webserver-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: schurrj.k8s.schoeppi5.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: webserver
+                port:
+                  number: 80
+
+
