@@ -181,13 +181,15 @@ spec:
 #    kubectl patch service webserver -p '{"spec":{"selector":{"app":"webserver","version":"green"}}}'
 #
 # 4. Validierung (Test der neuen Version):
-#     http://schurrj.k8s.schoeppi5.de
+#      http://schurrj.k8s.schoeppi5.de
 #
-# 5. Falls alles funktioniert, 'blue' auf neue Version updaten:
-#    kubectl scale deployment webserver-blue --replicas=0
+# 5. **Wartezeit (5-10 Minuten), um sicherzustellen, dass 'green' stabil läuft!**
 #
-# 6. Falls Fehler auftreten, schnell zurückwechseln:
+# 6. Falls 'green' stabil läuft, skaliere 'blue' herunter (nicht löschen!):
+#    kubectl scale deployment webserver-blue --replicas=1
+#
+# 7. Falls 'green' fehlschlägt, sofort zurückwechseln zu 'blue':
 #    kubectl patch service webserver -p '{"spec":{"selector":{"app":"webserver","version":"blue"}}}'
 #
-# 7. Deployment abschließen: Altes Deployment auf 2 Replikas setzen für nächstes Upgrade:
+# 8. Deployment abschließen: 'blue' wieder auf 2 Replikas setzen für das nächste Update:
 #    kubectl scale deployment webserver-blue --replicas=2
